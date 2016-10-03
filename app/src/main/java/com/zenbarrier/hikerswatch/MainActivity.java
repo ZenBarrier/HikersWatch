@@ -12,6 +12,7 @@ import android.location.LocationManager;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.widget.TextView;
 
 import java.io.IOException;
 import java.util.List;
@@ -22,11 +23,14 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     LocationManager locationManager;
     String provider;
     Geocoder geocoder;
+    TextView infoText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        infoText = (TextView)findViewById(R.id.infoTextView);
 
         locationManager = (LocationManager) getSystemService(Service.LOCATION_SERVICE);
         provider = locationManager.getBestProvider(new Criteria(), false);
@@ -41,7 +45,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             // for ActivityCompat#requestPermissions for more details.
             return;
         }
-        onLocationChanged(locationManager.getLastKnownLocation(provider));
     }
 
     @Override
@@ -58,6 +61,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             return;
         }
         locationManager.requestLocationUpdates(provider, 400, 1, this);
+        onLocationChanged(locationManager.getLastKnownLocation(provider));
     }
 
     @Override
@@ -84,15 +88,33 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         double speed = location.getSpeed();
         double bearing = location.getBearing();
         double altitude = location.getAltitude();
+
+        String locationInfo = "";
+
         List<Address> addressList;
+
+        locationInfo += String.format("Latitude: %.2f\n\n",lat);
+        locationInfo += String.format("Longitude: %.2f\n\n",lng);
+        locationInfo += String.format("Accuracy: %.2fm\n\n",accuracy);
+        locationInfo += String.format("Speed: %.2fm/s\n\n",speed);
+        locationInfo += String.format("Bearing: %.2f\n\n",bearing);
+        locationInfo += String.format("Altitude: %.2fm\n\n",altitude);
+
+
         try {
             addressList = geocoder.getFromLocation(lat, lng, 1);
             if(addressList.size() > 0){
                 Address address = addressList.get(0);
+                locationInfo += "Address:\n";
+                for(int i = 0; address.getAddressLine(i) != null ; i++) {
+                    locationInfo += String.format("%s\n", address.getAddressLine(i));
+                }
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        infoText.setText(locationInfo);
     }
 
     @Override
